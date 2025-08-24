@@ -1,0 +1,4 @@
+0.13s     4154  http://gopl.io
+0.29s    62967  http://golang.org
+0.30s    33470  http://godoc.org
+0.30s elapsed
