@@ -23,28 +23,105 @@ import (
 	"image"
 	"image/color"
 	"image/png"
+	//"math/big"
 	"math/cmplx"
 	"os"
 )
 
+// net
+import (
+	"io"
+	"log"
+	"net/http"
+	"net/url"
+	"strconv"
+)
+
+type params struct {
+	width   int     // width of image
+	height  int     // height of image
+	zoom    float64 // fractal zoom
+	fractal string  // fractal function
+}
+
+func queryInt(query url.Values, s string, def int) int {
+	v, err := strconv.Atoi(query.Get(s))
+	if err != nil {
+		v = def
+	}
+	return v
+}
+
+func queryFloat64(query url.Values, s string, def float64) float64 {
+	v, err := strconv.ParseFloat(query.Get(s), 64)
+	if err != nil {
+		v = def
+	}
+	return v
+}
+
+func queryString(query url.Values, s string, def string) string {
+	v := query.Get(s)
+	if v == "" {
+		v = def
+	}
+	return v
+}
+
+type fracf = func(complex128) color.Color
+
+var fractals = map[string]fracf{
+	"mandelbrot": func(z complex128) color.Color { return mandelbrot(z) },
+	"acos":       func(z complex128) color.Color { return acos(z) },
+	"sqrt":       func(z complex128) color.Color { return sqrt(z) },
+	"newton":     func(z complex128) color.Color { return newton(z) },
+}
+
 func main() {
+	// Exercise 3.9: Web server.
+	if len(os.Args) > 1 && os.Args[1] == "web" {
+		handler := func(w http.ResponseWriter, r *http.Request) {
+			q := r.URL.Query()
+			p := params{
+				queryInt(q, "width", 1024),
+				queryInt(q, "height", 1024),
+				queryFloat64(q, "zoom", 1.0),
+				queryString(q, "fractal", "mandelbrot"),
+			}
+
+			w.Header().Set("Content-Type", "image/png")
+			fractal(w, p)
+		}
+		http.HandleFunc("/", handler)
+		log.Fatal(http.ListenAndServe("localhost:8000", nil))
+		return
+	}
+	fractal(os.Stdout, params{1024, 1024, 1, "mandelbrot"})
+}
+
+func fractal(out io.Writer, p params) {
 	const (
 		xmin, ymin, xmax, ymax = -2, -2, +2, +2
-		width, height          = 1024, 1024
-		factor                 = 2 // supersampling scaling factor (don't change)
+		//width, height          = 1024, 1024
+		factor = 2 // scaling factor (don't change)
 	)
+
+	// Exercise 3.9: Web server.
+	zoom := 1.0 / p.zoom
+	width, height := p.width, p.height
 
 	img := image.NewRGBA(image.Rect(0, 0, width*factor, height*factor))
 	for py := range height * factor {
-		y := float64(py)/(height*factor)*(ymax-ymin) + ymin
+		y := float64(py)/(float64(height)*factor)*(ymax-ymin)*zoom + ymin*zoom
 		for px := range width * factor {
-			x := float64(px)/(width*factor)*(xmax-xmin) + xmin
+			x := float64(px)/(float64(width)*factor)*(xmax-xmin)*zoom + xmin*zoom
 			z := complex(x, y)
 			// Image point (px, py) represents complex value z.
-			img.Set(px, py, mandelbrot(z))
+			img.Set(px, py, fractals[p.fractal](z))
 		}
 	}
 
+	// Exercise 3.6: Supersampling
 	downsampled_img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for py := range height {
 		for px := range width {
@@ -67,7 +144,7 @@ func main() {
 		}
 	}
 
-	png.Encode(os.Stdout, downsampled_img) // NOTE: ignoring errors
+	png.Encode(out, downsampled_img) // NOTE: ignoring errors
 }
 
 func mandelbrot(z complex128) color.Color {
@@ -114,6 +191,8 @@ func sqrt(z complex128) color.Color {
 //
 //	= z - (z^4 - 1) / (4 * z^3)
 //	= z - (z - 1/z^3) / 4
+
+// Exercise 3.7: Newton's fractal.
 func newton(z complex128) color.Color {
 	const iterations = 37
 	const contrast = 7
