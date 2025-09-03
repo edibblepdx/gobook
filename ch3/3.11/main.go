@@ -30,8 +30,8 @@ func comma(s string) string {
 	sign, s := s[:signIdx+1], s[signIdx+1:]
 
 	intPart, fractPart := s, ""
-	if dot := strings.IndexByte(s, '.'); dot >= 0 {
-		intPart, fractPart = s[:dot], s[dot:]
+	if dotIdx := strings.IndexByte(s, '.'); dotIdx >= 0 {
+		intPart, fractPart = s[:dotIdx], s[dotIdx:]
 	}
 
 	var buf bytes.Buffer
