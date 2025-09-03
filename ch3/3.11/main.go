@@ -26,6 +26,8 @@ func main() {
 // !+
 // comma inserts commas in a non-negative decimal integer string.
 func comma(s string) string {
+	// If there's no sign the index returned is -1
+	// s[0:0] is just an empty string so this works.
 	signIdx := strings.IndexAny(s, "+-")
 	sign, s := s[:signIdx+1], s[signIdx+1:]
 
