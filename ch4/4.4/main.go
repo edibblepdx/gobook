@@ -31,10 +31,14 @@ func abs(n int) int {
 }
 
 // The modulus function
-func mod(a, b int) int {
-	r := a % b
+func mod(D, d int) int {
+	r := D % d
 	if r < 0 {
-		r += b
+		if d > 0 {
+			r += d
+		} else {
+			r -= d
+		}
 	}
 	return r
 }
@@ -80,6 +84,7 @@ func main() {
 	args := os.Args
 	if len(args) != 3 {
 		fmt.Fprintln(os.Stderr, "usage: go run . <length of array> <shift>")
+		os.Exit(1)
 	}
 
 	m, err := strconv.Atoi(args[1])
