@@ -30,15 +30,12 @@ func abs(n int) int {
 	return n
 }
 
-// The modulus function
-func mod(D, d int) int {
+// The modulus function defined in terms of floor division
+// https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
+func modF(D, d int) int {
 	r := D % d
-	if r < 0 {
-		if d > 0 {
-			r += d
-		} else {
-			r -= d
-		}
+	if (r > 0 && d < 0) || (r < 0 && d > 0) {
+		r += d
 	}
 	return r
 }
@@ -60,7 +57,7 @@ func rotate(s []int, n int) {
 		start++
 		idx, store := start, s[start]
 		for {
-			idx = mod(idx-n, l) // shift & wrap
+			idx = modF(idx-n, l) // shift & wrap
 			s[idx], store = store, s[idx]
 
 			if idx == start {
