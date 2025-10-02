@@ -30,7 +30,7 @@ func abs(n int) int {
 	return n
 }
 
-// The modulus function defined in terms of floor division
+// The modulo function defined in terms of floor division
 // https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
 func modF(D, d int) int {
 	r := D % d
